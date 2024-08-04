@@ -1,0 +1,122 @@
+import csv
+import os
+from datetime import datetime
+
+# File to store expense data
+DATA_FILE = 'expenses.csv'
+
+# Function to load expenses from CSV file
+def load_expenses():
+    expenses = {}
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, mode='r', newline='') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                date = row['date']
+                if date not in expenses:
+                    expenses[date] = []
+                expenses[date].append({
+                    'amount': float(row['amount']),
+                    'description': row['description'],
+                    'category': row['category']
+                })
+    return expenses
+
+# Function to save expenses to CSV file
+def save_expenses(expenses):
+    with open(DATA_FILE, mode='w', newline='') as file:
+        fieldnames = ['date', 'amount', 'description', 'category']
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for date, items in expenses.items():
+            for item in items:
+                writer.writerow({
+                    'date': date,
+                    'amount': item['amount'],
+                    'description': item['description'],
+                    'category': item['category']
+                })
+
+# Function to add an expense
+def add_expense(expenses):
+    try:
+        amount = float(input("Enter the amount spent: $"))
+        description = input("Enter a brief description: ")
+        category = input("Enter the category (e.g., food, transportation, entertainment): ").lower()
+        
+        date_str = input("Enter the date (YYYY-MM-DD): ")
+        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        if date_str not in expenses:
+            expenses[date_str] = []
+        
+        expenses[date_str].append({
+            'amount': amount,
+            'description': description,
+            'category': category
+        })
+        
+        save_expenses(expenses)
+        print("Expense added successfully.")
+    except ValueError as e:
+        print(f"Error: {e}. Please enter valid data.")
+
+# Function to view monthly expenses
+def view_monthly_expenses(expenses):
+    try:
+        month = input("Enter the month (YYYY-MM): ")
+        total = 0.0
+        print(f"Expenses for {month}:")
+        for date, items in expenses.items():
+            if date.startswith(month):
+                for item in items:
+                    print(f"Date: {date}, Amount: ${item['amount']:.2f}, Description: {item['description']}, Category: {item['category']}")
+                    total += item['amount']
+        print(f"Total: ${total:.2f}")
+    except Exception as e:
+        print(f"Error: {e}. Please enter a valid month.")
+
+# Function to view expenses by category
+def view_expenses_by_category(expenses):
+    try:
+        category = input("Enter the category to view (e.g., food, transportation, entertainment): ").lower()
+        total = 0.0
+        print(f"Expenses for category '{category}':")
+        for date, items in expenses.items():
+            for item in items:
+                if item['category'] == category:
+                    print(f"Date: {date}, Amount: ${item['amount']:.2f}, Description: {item['description']}")
+                    total += item['amount']
+        print(f"Total for category '{category}': ${total:.2f}")
+    except Exception as e:
+        print(f"Error: {e}. Please enter a valid category.")
+
+# Function to show the main menu
+def show_menu():
+    print("\nExpense Tracker Menu:")
+    print("1. Add Expense")
+    print("2. View Monthly Expenses")
+    print("3. View Expenses by Category")
+    print("4. Exit")
+
+def main():
+    expenses = load_expenses()
+    
+    while True:
+        show_menu()
+        choice = input("Choose an option: ")
+        
+        if choice == '1':
+            add_expense(expenses)
+        elif choice == '2':
+            view_monthly_expenses(expenses)
+        elif choice == '3':
+            view_expenses_by_category(expenses)
+        elif choice == '4':
+            print("Exiting the Expense Tracker. Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please select a valid option.")
+
+if __name__ == '__main__':
+    main()
